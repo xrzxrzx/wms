@@ -133,7 +133,7 @@ public class NewOrderFrame extends JFrame {
             return false;
         }
 
-        float price = Double.parseDouble(db.callGetLogisticsTypeInfo(Integer.parseInt(textFieldList.get(3).getText()), 2))
+        double price = Double.parseDouble(db.callGetLogisticsTypeInfo(Integer.parseInt(textFieldList.get(3).getText()), 2))
                 * Double.parseDouble(textFieldList.get(4).getText());
 
         return true;
