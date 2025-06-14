@@ -71,7 +71,7 @@ public class Database {
     }
 
     public String callGetCustomerInfo(int customerId){
-        String sql = "{CALL GetCustomerInfo(?, ?)}";
+        String sql = "{CALL proc_GetCustomerInfo(?, ?)}";
         String name = "NULL";
 
         try (CallableStatement cstmt = conn.prepareCall(sql)) {
@@ -89,7 +89,7 @@ public class Database {
 
     /// 当type为1时返回类型名称，为2时返回价格系数
     public String callGetLogisticsTypeInfo(int typeId, int type){
-        String sql = "{CALL GetLogisticsTypeInfo(?, ?, ?)}";
+        String sql = "{CALL proc_GetLogisticsTypeInfo(?, ?, ?)}";
         String res = "NULL";
 
         try (CallableStatement cstmt = conn.prepareCall(sql)) {
@@ -110,13 +110,32 @@ public class Database {
         return res;
     }
 
+    public String callGetWorkerInfo(int workerId){
+        String sql = "{CALL proc_GetWorkerInfo(?, ?)}";
+        String name = "NULL";
+
+        try (CallableStatement cstmt = conn.prepareCall(sql)) {
+            cstmt.setInt(1, workerId);
+            cstmt.registerOutParameter(2, Types.VARCHAR);
+
+            cstmt.execute();
+
+            name = cstmt.getString(2);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return name;
+    }
+
     public static void main(String[] args) {
         Database db = new Database();
         db.connect();
 
-        boolean is_vaild = db.callVerifyUserCredentials("111", "123456");
+        String res;
 
-        System.out.println(is_vaild);
+        res = db.callGetCustomerInfo(5);
+
+        System.out.println(res);
 
         db.Close();
     }
