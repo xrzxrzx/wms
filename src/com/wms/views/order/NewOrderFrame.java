@@ -156,15 +156,16 @@ public class NewOrderFrame extends JFrame {
 
         // 保存订单到数据库
         try {
-            String sql = "INSERT INTO tb_orders (customer_id, type_id, total_price, operator_id, target_address, now_address, status, date) VALUES (?, ?, ?, ?, ?, ?, ?, curdate())";
+            String sql = "INSERT INTO tb_orders (customer_id, type_id, weight, total_price, operator_id, target_address, now_address, status, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, curdate())";
             java.sql.PreparedStatement pstmt = db.conn.prepareStatement(sql);
             pstmt.setInt(1, customerId);
             pstmt.setInt(2, type);
-            pstmt.setDouble(3, price);
-            pstmt.setInt(4, workId);
-            pstmt.setString(5, targetLocation);
-            pstmt.setString(6, nowLocation);
-            pstmt.setString(7, "待发货");
+            pstmt.setDouble(3, weight);
+            pstmt.setDouble(4, price);
+            pstmt.setInt(5, workId);
+            pstmt.setString(6, targetLocation);
+            pstmt.setString(7, nowLocation);
+            pstmt.setString(8, "待发货");
             int rows = pstmt.executeUpdate();
             if (rows > 0) {
                 JOptionPane.showMessageDialog(this, "订单保存成功！");

@@ -6,6 +6,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Database {
     private static final String URL = "jdbc:mysql://localhost:3306/db_school_wms";
@@ -127,15 +129,70 @@ public class Database {
         return name;
     }
 
+    public Object[][] getOrdersInfo(){
+
+        String sql = "SELECT order_id, tb_customers.customer_name, now_address, target_address,\n" +
+                "        tb_types.type_name,tb_orders.weight, tb_orders.total_price,\n" +
+                "        `status`, `date`\n" +
+                "FROM tb_customers, tb_orders, tb_types\n" +
+                "WHERE tb_orders.customer_id = tb_customers.customer_id\n" +
+                "AND tb_orders.type_id = tb_types.type_id\n" +
+                "ORDER BY order_id;";
+        List<Object[]> rows = null;
+
+        try{
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql);
+
+            // 获取结果集元数据
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            // 使用List暂存结果
+            rows = new ArrayList<>();
+
+            // 遍历结果集
+            while (rs.next()) {
+                Object[] row = new Object[columnCount];
+
+                // 填充行数据
+                for (int i = 0; i < columnCount; i++) {
+                    // 注意：JDBC列索引从1开始
+                    row[i] = rs.getObject(i + 1);
+                }
+
+                rows.add(row);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return rows != null ? rows.toArray(new Object[0][]) : null;
+    }
+
+    public Object[][] getOrdersInfo(int ordrId){
+        return null;
+    }
+
+    public void deleteOrder(int orderId){
+        String sql = "DELETE FROM tb_orders\n" +
+                "WHERE tb_orders.order_id=" + orderId;
+        try{
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
         Database db = new Database();
         db.connect();
 
         String res;
 
-        res = db.callGetCustomerInfo(5);
+        db.deleteOrder(130);
 
-        System.out.println(res);
+        //System.out.println(res);
 
         db.Close();
     }
