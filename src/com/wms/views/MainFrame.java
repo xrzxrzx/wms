@@ -1,11 +1,17 @@
 package com.wms.views;
 
+import com.wms.database.Database;
+import com.wms.views.order.EditOrderFrame;
 import com.wms.views.order.NewOrderFrame;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
+import java.util.List;
 
 public class MainFrame extends JFrame {
     private JTabbedPane tabbedPane;
@@ -14,11 +20,18 @@ public class MainFrame extends JFrame {
     private JPanel customerPanel;
     private JPanel statisticsPanel;
 
+    private DefaultTableModel tableModel;
+
+    private Database db;
+
     public MainFrame() {
         setTitle("物流管理系统");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1024, 768);
         setLocationRelativeTo(null);
+
+        db = new Database();
+        db.connect();
 
         // 创建菜单栏
         createMenuBar();
@@ -88,6 +101,8 @@ public class MainFrame extends JFrame {
 
     private void createOrderPanel() {
         orderPanel = new JPanel(new BorderLayout());
+
+         Object[][] data=null;
         
         // 创建工具栏
         JToolBar toolBar = new JToolBar();
@@ -96,28 +111,80 @@ public class MainFrame extends JFrame {
         JButton addButton = new JButton("新建订单");
         JButton editButton = new JButton("编辑订单");
         JButton deleteButton = new JButton("删除订单");
+        JButton refreshButton = new JButton("刷新订单");
 
         addButton.addActionListener(e ->{
-           new NewOrderFrame().setVisible(true);
+           new NewOrderFrame().Show();
+        });
+
+        editButton.addActionListener(e ->{
+            new EditOrderFrame().Show();
+        });
+
+        refreshButton.addActionListener(e ->{
+            updateOrdersInfo();
         });
         
         toolBar.add(addButton);
         toolBar.add(editButton);
         toolBar.add(deleteButton);
+        toolBar.add(refreshButton);
         
         // 创建表格
-        String[] columnNames = {"订单编号", "客户名称", "起始地", "目的地", "货物类型", "重量（kg）", "物流费用", "状态", "创建时间"};
-        Object[][] data = {
-            {"ORD001", "张三", "北京", "北京", "服装", "123", "123", "运输中", "2024-03-20"},
-            {"ORD002", "李四", "上海", "北京", "易燃易爆", "123", "123", "已签收", "2024-03-19"},
-            {"ORD003", "王五", "广州", "北京", "服装", "123", "123", "待发货", "2024-03-21"}
+        String[] columnNames = {"订单编号", "客户名称", "当前位置", "目的地", "货物类型", "重量（kg）", "物流费用", "状态", "创建时间"};
+
+        tableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                // 只有操作列可编辑
+                return column == 7;
+            }
         };
+
+        updateOrdersInfo();
         
-        JTable orderTable = new JTable(data, columnNames);
+        JTable orderTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(orderTable);
-        
+
+        deleteButton.addActionListener(e ->{
+            deleteOrder(orderTable);
+        });
+
         orderPanel.add(toolBar, BorderLayout.NORTH);
         orderPanel.add(scrollPane, BorderLayout.CENTER);
+    }
+
+    private void deleteOrder(JTable table) {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow != -1) {
+            // 转换为模型索引
+            int modelRow = table.convertRowIndexToModel(selectedRow);
+
+            // 获取订单ID
+            int orderId = Integer.parseInt(table.getValueAt(modelRow, 0).toString());
+
+            int result = JOptionPane.showConfirmDialog(this, "确定要删除此订单吗？", "删除订单", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (result == JOptionPane.YES_OPTION) {
+                db.deleteOrder(orderId);
+                updateOrdersInfo();
+            } else {
+                return;
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "没用选中行");
+        }
+    }
+
+    private void updateOrdersInfo() {
+        // 清除现有数据
+        tableModel.setRowCount(0);
+        Object[][] data = db.getOrdersInfo();
+        List<Object>Orders = Arrays.asList(data);
+        // 添加新数据
+        for (int i = 0; i < Orders.size(); i++) {
+            Object[] rowData = data[i];
+            tableModel.addRow(rowData);
+        }
     }
 
     private void createTrackingPanel() {
