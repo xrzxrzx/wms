@@ -284,12 +284,26 @@ public class MainFrame extends JFrame {
         updateOrdersInfo();
     }
 
-    private void deleteOrder() {
-        int selectedRow = orderTable.getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "请先选择要删除的订单", "提示", JOptionPane.WARNING_MESSAGE);
-            return;
+
+    private void editoOrder(JTable table) {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow != -1) {
+            // 转换为模型索引
+            int modelRow = table.convertRowIndexToModel(selectedRow);
+
+            // 获取订单ID
+            int orderId = Integer.parseInt(table.getValueAt(modelRow, 0).toString());
+
+            new EditOrderFrame(orderId).Show();
         }
+    }
+
+    private void deleteOrder(JTable table) {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow != -1) {
+            // 转换为模型索引
+            int modelRow = table.convertRowIndexToModel(selectedRow);
+
 
         int modelRow = orderTable.convertRowIndexToModel(selectedRow);
         String orderId = orderTable.getValueAt(modelRow, 0).toString();

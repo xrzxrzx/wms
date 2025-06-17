@@ -46,7 +46,7 @@ public class NewOrderFrame extends JFrame {
         setMinimumSize(new Dimension(500, 500));
         setResizable(true);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        
+
         // 设置窗口图标（如果有的话）
         try {
             setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/images/order_icon.png")));
@@ -110,8 +110,8 @@ public class NewOrderFrame extends JFrame {
         JPanel containerPanel = new JPanel(new BorderLayout());
         containerPanel.setBackground(Color.WHITE);
         containerPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(BORDER_COLOR, 1),
-            BorderFactory.createEmptyBorder(15, 15, 15, 15)
+                BorderFactory.createLineBorder(BORDER_COLOR, 1),
+                BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
 
         // 创建表单标题
@@ -152,25 +152,25 @@ public class NewOrderFrame extends JFrame {
         textField.setFont(new Font("微软雅黑", Font.PLAIN, 14));
         textField.setPreferredSize(new Dimension(200, 30));
         textField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(BORDER_COLOR, 1),
-            BorderFactory.createEmptyBorder(3, 8, 3, 8)
+                BorderFactory.createLineBorder(BORDER_COLOR, 1),
+                BorderFactory.createEmptyBorder(3, 8, 3, 8)
         ));
-        
+
         // 添加焦点监听器来改变边框颜色
         textField.addFocusListener(new java.awt.event.FocusAdapter() {
             @Override
             public void focusGained(java.awt.event.FocusEvent e) {
                 textField.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(PRIMARY_COLOR, 2),
-                    BorderFactory.createEmptyBorder(2, 7, 2, 7)
+                        BorderFactory.createLineBorder(PRIMARY_COLOR, 2),
+                        BorderFactory.createEmptyBorder(2, 7, 2, 7)
                 ));
             }
-            
+
             @Override
             public void focusLost(java.awt.event.FocusEvent e) {
                 textField.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(BORDER_COLOR, 1),
-                    BorderFactory.createEmptyBorder(3, 8, 3, 8)
+                        BorderFactory.createLineBorder(BORDER_COLOR, 1),
+                        BorderFactory.createEmptyBorder(3, 8, 3, 8)
                 ));
             }
         });
@@ -186,11 +186,11 @@ public class NewOrderFrame extends JFrame {
         // 创建保存按钮
         JButton saveButton = createStyledButton("保存订单", SUCCESS_COLOR);
         saveButton.addActionListener(e -> {
-            if(isNULL()){
+            if (isNULL()) {
                 showErrorDialog("数据验证失败", "请确保所有字段都已填写完整！");
                 return;
             }
-            if(SaveData()) {
+            if (SaveData()) {
                 showSuccessDialog("订单创建成功", "新订单已成功创建并保存到数据库！");
                 clearForm();
             }
@@ -200,11 +200,11 @@ public class NewOrderFrame extends JFrame {
         JButton cancelButton = createStyledButton("取消", WARNING_COLOR);
         cancelButton.addActionListener(e -> {
             int result = JOptionPane.showConfirmDialog(
-                this, 
-                "确定要取消创建订单吗？", 
-                "确认取消", 
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
+                    this,
+                    "确定要取消创建订单吗？",
+                    "确认取消",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
             );
             if (result == JOptionPane.YES_OPTION) {
                 this.dispose();
@@ -234,7 +234,7 @@ public class NewOrderFrame extends JFrame {
             public void mouseEntered(java.awt.event.MouseEvent e) {
                 button.setBackground(backgroundColor.darker());
             }
-            
+
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
                 button.setBackground(backgroundColor);
@@ -246,19 +246,19 @@ public class NewOrderFrame extends JFrame {
 
     private void showErrorDialog(String title, String message) {
         JOptionPane.showMessageDialog(
-            this, 
-            message, 
-            title, 
-            JOptionPane.ERROR_MESSAGE
+                this,
+                message,
+                title,
+                JOptionPane.ERROR_MESSAGE
         );
     }
 
     private void showSuccessDialog(String title, String message) {
         JOptionPane.showMessageDialog(
-            this, 
-            message, 
-            title, 
-            JOptionPane.INFORMATION_MESSAGE
+                this,
+                message,
+                title,
+                JOptionPane.INFORMATION_MESSAGE
         );
     }
 
@@ -272,12 +272,13 @@ public class NewOrderFrame extends JFrame {
     private boolean isNULL() {
         textFieldListIterator = textFieldList.listIterator();
         while (textFieldListIterator.hasNext()) {
-            if(textFieldListIterator.next().getText().trim().isEmpty()){
+            if (textFieldListIterator.next().getText().trim().isEmpty()) {
                 return true;
             }
         }
         return false;
     }
+
 
     private boolean SaveData(){
 
@@ -295,26 +296,26 @@ public class NewOrderFrame extends JFrame {
                 return false;
             }
 
-            //物流类型编号验证
-            if(Objects.equals(db.callGetLogisticsTypeInfo(type, 1), "NULL")){
-                showErrorDialog("验证失败", "物流类型不存在！请检查物流类型编号。");
-                return false;
-            }
+        //物流类型编号验证
+        if (Objects.equals(db.callGetLogisticsTypeInfo(type, 1), "NULL")) {
+            showErrorDialog("验证失败", "物流类型不存在！请检查物流类型编号。");
+            return false;
+        }
 
-            //物流工人编号验证
-            if(Objects.equals(db.callGetWorkerInfo(workId), "NULL")){
-                showErrorDialog("验证失败", "物流工人不存在！请检查工人编号。");
-                return false;
-            }
+        //物流工人编号验证
+        if (Objects.equals(db.callGetWorkerInfo(workId), "NULL")) {
+            showErrorDialog("验证失败", "物流工人不存在！请检查工人编号。");
+            return false;
+        }
 
-            // 重量验证
-            if (weight <= 0) {
-                showErrorDialog("验证失败", "重量必须大于0！");
-                return false;
-            }
+        // 重量验证
+        if (weight <= 0) {
+            showErrorDialog("验证失败", "重量必须大于0！");
+            return false;
+        }
 
-            //物流费用=价格系数*重量
-            price = Double.parseDouble(db.callGetLogisticsTypeInfo(type, 2)) * weight;
+        //物流费用=价格系数*重量
+        price = Double.parseDouble(db.callGetLogisticsTypeInfo(type, 2)) * weight;
 
         // 保存订单到数据库
         try {
@@ -330,7 +331,7 @@ public class NewOrderFrame extends JFrame {
             pstmt.setString(8, "待发货");
             int rows = pstmt.executeUpdate();
             pstmt.close();
-            
+
             if (rows > 0) {
                 return true;
             } else {
@@ -347,13 +348,13 @@ public class NewOrderFrame extends JFrame {
         }
     }
 
-    public void Show(){
+    public void Show() {
         try {
             // 设置系统外观
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            
+
             // 设置全局字体
-            UIManager.put("Button.font", new Font("微软雅黑", Font.PLAIN, 12));
+            //UIManager.put("Button.font", new Font("微软雅黑", Font.PLAIN, 12));
             UIManager.put("Label.font", new Font("微软雅黑", Font.PLAIN, 12));
             UIManager.put("TextField.font", new Font("微软雅黑", Font.PLAIN, 12));
         } catch (Exception e) {
