@@ -185,8 +185,8 @@ public class MainFrame extends JFrame {
         JButton refreshButton = createStyledButton("🔄 刷新", "刷新订单列表", PRIMARY_COLOR);
 
         addButton.addActionListener(e -> new NewOrderFrame().Show());
-        editButton.addActionListener(e -> new EditOrderFrame().Show());
-        deleteButton.addActionListener(e -> deleteOrder());
+        editButton.addActionListener(e -> new EditOrderFrame(orderTable).Show());
+        deleteButton.addActionListener(e -> deleteOrder(orderTable));
         refreshButton.addActionListener(e -> updateOrdersInfo());
         
         toolBar.add(addButton);
@@ -285,25 +285,12 @@ public class MainFrame extends JFrame {
     }
 
 
-    private void editoOrder(JTable table) {
-        int selectedRow = table.getSelectedRow();
-        if (selectedRow != -1) {
-            // 转换为模型索引
-            int modelRow = table.convertRowIndexToModel(selectedRow);
-
-            // 获取订单ID
-            int orderId = Integer.parseInt(table.getValueAt(modelRow, 0).toString());
-
-            new EditOrderFrame(orderId).Show();
-        }
-    }
-
     private void deleteOrder(JTable table) {
         int selectedRow = table.getSelectedRow();
         if (selectedRow != -1) {
             // 转换为模型索引
             int modelRow = table.convertRowIndexToModel(selectedRow);
-
+        }
 
         int modelRow = orderTable.convertRowIndexToModel(selectedRow);
         String orderId = orderTable.getValueAt(modelRow, 0).toString();

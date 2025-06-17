@@ -28,14 +28,22 @@ public class EditOrderFrame extends JFrame {
 
     private int orderId;
 
-    public EditOrderFrame(int orderId) {
+    public EditOrderFrame(JTable table) {
         super("编辑订单");
         // 设置窗口大小
         setSize(750, 600);
         // 设置关闭操作
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        this.orderId = orderId;
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow != -1) {
+            // 转换为模型索引
+            int modelRow = table.convertRowIndexToModel(selectedRow);
+        }
+
+        int modelRow = table.convertRowIndexToModel(selectedRow);
+        String orderId = table.getValueAt(modelRow, 0).toString();
+        this.orderId = Integer.parseInt(orderId);
 
         // 设置窗口图标
         setIconImage(createWindowIcon());
@@ -540,7 +548,7 @@ public class EditOrderFrame extends JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new EditOrderFrame(120).Show();
+                new EditOrderFrame(new JTable()).Show();
             }
         });
     }

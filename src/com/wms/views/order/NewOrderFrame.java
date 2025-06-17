@@ -355,8 +355,8 @@ public class NewOrderFrame extends JFrame {
 
             // 设置全局字体
             //UIManager.put("Button.font", new Font("微软雅黑", Font.PLAIN, 12));
-            UIManager.put("Label.font", new Font("微软雅黑", Font.PLAIN, 12));
-            UIManager.put("TextField.font", new Font("微软雅黑", Font.PLAIN, 12));
+            //UIManager.put("Label.font", new Font("微软雅黑", Font.PLAIN, 12));
+            //UIManager.put("TextField.font", new Font("微软雅黑", Font.PLAIN, 12));
         } catch (Exception e) {
             e.printStackTrace();
         }
