@@ -279,20 +279,22 @@ public class NewOrderFrame extends JFrame {
         return false;
     }
 
-    private boolean SaveData() {
-        int customerId = Integer.parseInt(textFieldList.get(0).getText().trim());
-        String nowLocation = textFieldList.get(1).getText().trim();
-        String targetLocation = textFieldList.get(2).getText().trim();
-        int type = Integer.parseInt(textFieldList.get(3).getText().trim());
-        double weight = Double.parseDouble(textFieldList.get(4).getText().trim());
-        int workId = Integer.parseInt(textFieldList.get(5).getText().trim());
-        double price;//物流费用（需计算）
 
-        //客户编号验证
-        if (Objects.equals(db.callGetCustomerInfo(customerId), "NULL")) {
-            showErrorDialog("验证失败", "客户不存在！请检查客户编号。");
-            return false;
-        }
+    private boolean SaveData(){
+
+            int customerId = Integer.parseInt(textFieldList.get(0).getText().trim());
+            String nowLocation = textFieldList.get(1).getText().trim();
+            String targetLocation = textFieldList.get(2).getText().trim();
+            int type = Integer.parseInt(textFieldList.get(3).getText().trim());
+            double weight = Double.parseDouble(textFieldList.get(4).getText().trim());
+            int workId = Integer.parseInt(textFieldList.get(5).getText().trim());
+            double price;//物流费用（需计算）
+
+            //客户编号验证
+            if(Objects.equals(db.callGetCustomerInfo(customerId), "NULL")){
+                showErrorDialog("验证失败", "客户不存在！请检查客户编号。");
+                return false;
+            }
 
         //物流类型编号验证
         if (Objects.equals(db.callGetLogisticsTypeInfo(type, 1), "NULL")) {
