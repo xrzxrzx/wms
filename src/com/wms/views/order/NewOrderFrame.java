@@ -280,7 +280,7 @@ public class NewOrderFrame extends JFrame {
     }
 
     private boolean SaveData(){
-        try {
+
             int customerId = Integer.parseInt(textFieldList.get(0).getText().trim());
             String nowLocation = textFieldList.get(1).getText().trim();
             String targetLocation = textFieldList.get(2).getText().trim();
