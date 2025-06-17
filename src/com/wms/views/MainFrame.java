@@ -117,10 +117,6 @@ public class MainFrame extends JFrame {
            new NewOrderFrame().Show();
         });
 
-        editButton.addActionListener(e ->{
-            new EditOrderFrame().Show();
-        });
-
         refreshButton.addActionListener(e ->{
             updateOrdersInfo();
         });
@@ -146,12 +142,29 @@ public class MainFrame extends JFrame {
         JTable orderTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(orderTable);
 
+        editButton.addActionListener(e ->{
+            editoOrder(orderTable);
+        });
+
         deleteButton.addActionListener(e ->{
             deleteOrder(orderTable);
         });
 
         orderPanel.add(toolBar, BorderLayout.NORTH);
         orderPanel.add(scrollPane, BorderLayout.CENTER);
+    }
+
+    private void editoOrder(JTable table) {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow != -1) {
+            // 转换为模型索引
+            int modelRow = table.convertRowIndexToModel(selectedRow);
+
+            // 获取订单ID
+            int orderId = Integer.parseInt(table.getValueAt(modelRow, 0).toString());
+
+            new EditOrderFrame(orderId).Show();
+        }
     }
 
     private void deleteOrder(JTable table) {
