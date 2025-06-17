@@ -286,6 +286,7 @@ public class Database {
                 ordersStatistics[1] = rs.getString(2);
                 ordersStatistics[2] = rs.getString(3);
                 ordersStatistics[3] = rs.getString(4);
+
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -414,6 +415,7 @@ public class Database {
         }
 
         return deliveryStatistics;
+
     }
 
     public static void main(String[] args) {
