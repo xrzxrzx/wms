@@ -170,7 +170,42 @@ public class Database {
     }
 
     public Object[][] getOrdersInfo(int ordrId){
-        return null;
+        String sql = "SELECT order_id, tb_customers.customer_id,\n" +
+                "        target_address, tb_orders.weight,\n" +
+                "        `status`, `date`\n" +
+                "FROM tb_customers, tb_orders, tb_types\n" +
+                "WHERE tb_orders.customer_id = tb_customers.customer_id\n" +
+                "AND tb_orders.type_id = tb_types.type_id\n" +
+                "AND order_id=" + ordrId + ";";
+        List<Object[]> rows = null;
+
+        try{
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+
+            // 获取结果集元数据
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            // 使用List暂存结果
+            rows = new ArrayList<>();
+
+            // 遍历结果集
+            while (rs.next()) {
+                Object[] row = new Object[columnCount];
+
+                // 填充行数据
+                for (int i = 0; i < columnCount; i++) {
+                    // 注意：JDBC列索引从1开始
+                    row[i] = rs.getObject(i + 1);
+                }
+
+                rows.add(row);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return rows != null ? rows.toArray(new Object[0][]) : null;
     }
 
     public void deleteOrder(int orderId){
@@ -184,15 +219,151 @@ public class Database {
         }
     }
 
+    // 客户管理相关方法
+    
+    /**
+     * 获取所有客户信息
+     */
+    public Object[][] getCustomersInfo() {
+        String sql = "SELECT customer_id, customer_name, contact_person, phone, address, create_time " +
+                "FROM tb_customers ORDER BY customer_id";
+        List<Object[]> rows = null;
+
+        try {
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            rows = new ArrayList<>();
+
+            while (rs.next()) {
+                Object[] row = new Object[columnCount];
+                for (int i = 0; i < columnCount; i++) {
+                    row[i] = rs.getObject(i + 1);
+                }
+                rows.add(row);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return rows != null ? rows.toArray(new Object[0][]) : null;
+    }
+
+    /**
+     * 根据客户ID获取客户详细信息
+     */
+    public Object[] getCustomerById(String customerId) {
+        String sql = "SELECT customer_id, customer_name, contact_person, phone, address, is_vip, create_time " +
+                "FROM tb_customers WHERE customer_id = ?";
+        
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, customerId);
+            ResultSet rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                Object[] customer = new Object[7];
+                customer[0] = rs.getString("customer_id");
+                customer[1] = rs.getString("customer_name");
+                customer[2] = rs.getString("contact_person");
+                customer[3] = rs.getString("phone");
+                customer[4] = rs.getString("address");
+                customer[5] = rs.getBoolean("is_vip");
+                customer[6] = rs.getString("create_time");
+                return customer;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * 更新客户信息
+     */
+    public boolean updateCustomer(String customerId, String customerName, String contactPerson, 
+                                String phone, String address, boolean isVip) {
+        String sql = "UPDATE tb_customers SET customer_name = ?, contact_person = ?, " +
+                "phone = ?, address = ?, is_vip = ? WHERE customer_id = ?";
+        
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, customerName);
+            pstmt.setString(2, contactPerson);
+            pstmt.setString(3, phone);
+            pstmt.setString(4, address);
+            pstmt.setBoolean(5, isVip);
+            pstmt.setString(6, customerId);
+            
+            int result = pstmt.executeUpdate();
+            return result > 0;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * 删除客户信息
+     */
+    public boolean deleteCustomer(String customerId) {
+        // 首先检查是否有相关订单
+        String checkSql = "SELECT COUNT(*) FROM tb_orders WHERE customer_id = ?";
+        try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+            checkStmt.setString(1, customerId);
+            ResultSet rs = checkStmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                return false; // 有相关订单，不能删除
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+
+        // 删除客户
+        String sql = "DELETE FROM tb_customers WHERE customer_id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, customerId);
+            int result = pstmt.executeUpdate();
+            return result > 0;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * 添加新客户
+     */
+    public boolean addCustomer(String customerId, String customerName, String contactPerson, 
+                             String phone, String address, boolean isVip) {
+        String sql = "INSERT INTO tb_customers (customer_id, customer_name, contact_person, phone, address, is_vip, create_time) " +
+                "VALUES (?, ?, ?, ?, ?, ?, NOW())";
+        
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, customerId);
+            pstmt.setString(2, customerName);
+            pstmt.setString(3, contactPerson);
+            pstmt.setString(4, phone);
+            pstmt.setString(5, address);
+            pstmt.setBoolean(6, isVip);
+            
+            int result = pstmt.executeUpdate();
+            return result > 0;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
     public static void main(String[] args) {
         Database db = new Database();
         db.connect();
 
-        String res;
+        Object res[][] = null;
 
-        db.deleteOrder(130);
+        res = db.getOrdersInfo(120);
 
-        //System.out.println(res);
+        System.out.println(res[0][2].toString());
 
         db.Close();
     }
