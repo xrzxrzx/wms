@@ -3,6 +3,8 @@ package com.wms.views;
 import com.wms.database.Database;
 import com.wms.views.order.EditOrderFrame;
 import com.wms.views.order.NewOrderFrame;
+import com.wms.views.customer.AddCustomerFrame;
+import com.wms.views.customer.EditCustomerFrame;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -421,6 +423,11 @@ public class MainFrame extends JFrame {
         JButton deleteButton = createStyledButton("🗑️ 删除客户", "删除选中的客户", WARNING_COLOR);
         JButton refreshButton = createStyledButton("🔄 刷新", "刷新客户列表", PRIMARY_COLOR);
         
+        addButton.addActionListener(e -> new AddCustomerFrame().Show());
+        editButton.addActionListener(e -> editCustomer(customerTable));
+        deleteButton.addActionListener(e -> deleteCustomer(customerTable));
+        refreshButton.addActionListener(e -> updateCustomersInfo());
+        
         toolBar.add(addButton);
         toolBar.add(editButton);
         toolBar.add(deleteButton);
@@ -434,8 +441,69 @@ public class MainFrame extends JFrame {
         customerPanel.add(new JScrollPane(customerTable), BorderLayout.CENTER);
     }
 
+    private void editCustomer(JTable table) {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "请先选择一个客户", "提示", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // 转换为模型索引
+        int modelRow = table.convertRowIndexToModel(selectedRow);
+        String customerId = table.getValueAt(modelRow, 0).toString();
+        
+        // 打开编辑客户界面
+        new EditCustomerFrame(customerId).Show();
+    }
+
+    private void deleteCustomer(JTable table) {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "请先选择一个客户", "提示", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // 转换为模型索引
+        int modelRow = table.convertRowIndexToModel(selectedRow);
+        String customerId = table.getValueAt(modelRow, 0).toString();
+        String customerName = table.getValueAt(modelRow, 1).toString();
+
+        int result = JOptionPane.showConfirmDialog(this, 
+            "确定要删除客户 " + customerName + " (ID: " + customerId + ") 吗？\n\n注意：如果该客户有相关订单，将无法删除。", 
+            "删除确认", 
+            JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            
+        if (result == JOptionPane.YES_OPTION) {
+            try {
+                boolean success = db.deleteCustomer(customerId);
+                if (success) {
+                    updateCustomersInfo();
+                    JOptionPane.showMessageDialog(this, "客户删除成功", "成功", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "删除失败：该客户可能有相关订单，无法删除", "错误", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "删除失败: " + e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void updateCustomersInfo() {
+        customerTableModel.setRowCount(0);
+        try {
+            Object[][] data = db.getCustomersInfo();
+            if (data != null) {
+                for (Object[] rowData : data) {
+                    customerTableModel.addRow(rowData);
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "获取客户信息失败: " + e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     private void createCustomerTable() {
-        String[] columnNames = {"客户编号", "客户名称", "联系人", "电话", "地址", "最后活跃时间"};
+        String[] columnNames = {"客户编号", "客户名称", "联系人", "电话", "地址", "创建时间"};
         
         customerTableModel = new DefaultTableModel(columnNames, 0) {
             @Override
@@ -465,22 +533,8 @@ public class MainFrame extends JFrame {
         customerTable.getColumnModel().getColumn(4).setPreferredWidth(200);
         customerTable.getColumnModel().getColumn(5).setPreferredWidth(120);
 
-        // 添加示例数据
-        addSampleCustomerData();
-    }
-
-    private void addSampleCustomerData() {
-        Object[][] data = {
-            {"CUS001", "张三公司", "张三", "13800138001", "北京市朝阳区建国路88号", "2024-01-15"},
-            {"CUS002", "李四贸易", "李四", "13800138002", "上海市浦东新区陆家嘴金融中心", "2024-02-20"},
-            {"CUS003", "王五物流", "王五", "13800138003", "广州市天河区珠江新城", "2024-03-10"},
-            {"CUS004", "赵六电商", "赵六", "13800138004", "深圳市南山区科技园", "2024-03-18"},
-            {"CUS005", "钱七制造", "钱七", "13800138005", "杭州市西湖区文三路", "2024-03-19"}
-        };
-        
-        for (Object[] rowData : data) {
-            customerTableModel.addRow(rowData);
-        }
+        // 加载客户数据
+        updateCustomersInfo();
     }
 
     private void createStatisticsPanel() {
