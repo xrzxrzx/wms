@@ -208,6 +208,43 @@ public class Database {
         return rows != null ? rows.toArray(new Object[0][]) : null;
     }
 
+    public Object[][] selectOrdersInfo(int orderId){
+        String sql = "SELECT order_id, now_address, tb_operators.`name`, tb_operators.operation_id, tb_operators.phone, \n" +
+                "        `status`, DATE_ADD((SELECT `date` FROM tb_orders WHERE order_id="+ orderId + "),INTERVAL 3 DAY)\n" +
+                "FROM tb_orders, tb_operators\n" +
+                "WHERE tb_orders.operator_id=tb_operators.operation_id\n" +
+                "AND order_id="+ orderId + ";";
+        List<Object[]> rows = null;
+
+        try{
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+
+            // 获取结果集元数据
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            // 使用List暂存结果
+            rows = new ArrayList<>();
+
+            // 遍历结果集
+            while (rs.next()) {
+                Object[] row = new Object[columnCount];
+
+                // 填充行数据
+                for (int i = 0; i < columnCount; i++) {
+                    // 注意：JDBC列索引从1开始
+                    row[i] = rs.getObject(i + 1);
+                }
+
+                rows.add(row);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return rows != null ? rows.toArray(new Object[0][]) : null;
+    }
+
     public void deleteOrder(int orderId){
         String sql = "DELETE FROM tb_orders\n" +
                 "WHERE tb_orders.order_id=" + orderId;
@@ -225,7 +262,7 @@ public class Database {
 
         Object res[][] = null;
 
-        res = db.getOrdersInfo(120);
+        res = db.selectOrdersInfo(120);
 
         System.out.println(res[0][2].toString());
 

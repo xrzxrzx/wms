@@ -400,12 +400,13 @@ public class MainFrame extends JFrame {
             JOptionPane.showMessageDialog(this, "请输入订单编号", "提示", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        
-        // 模拟查询结果
-        trackingStatusLabel.setText("订单状态：运输中");
-        trackingLocationLabel.setText("当前位置：北京市朝阳区物流中心");
-        trackingDeliveryLabel.setText("预计送达：2024-03-22 14:30");
-        trackingCourierLabel.setText("配送员：张师傅 (13800138000)");
+
+        Object[][] data = db.selectOrdersInfo(Integer.parseInt(orderId));
+
+        trackingStatusLabel.setText("订单状态：" + data[0][5]);
+        trackingLocationLabel.setText("当前位置：" + data[0][1]);
+        trackingDeliveryLabel.setText("预计送达：" + data[0][6]);
+        trackingCourierLabel.setText("配送员：" + data[0][2] + "（" + data[0][4] + "）");
     }
 
     private void createCustomerPanel() {
