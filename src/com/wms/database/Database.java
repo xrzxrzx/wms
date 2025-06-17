@@ -256,15 +256,175 @@ public class Database {
         }
     }
 
+    public String[] getOrdersStatistics(){
+        String[] ordersStatistics = new String[4];
+
+        String sql = "SELECT \n" +
+                "  COUNT(*) AS total,\n" +
+                "  SUM(CASE WHEN status = '待处理' THEN 1 ELSE 0 END) AS pending,\n" +
+                "  SUM(CASE WHEN status = '运输中' THEN 1 ELSE 0 END) AS shipping,\n" +
+                "  SUM(CASE WHEN status = '已签收' THEN 1 ELSE 0 END) AS delivered\n" +
+                "FROM tb_orders\n" +
+                "WHERE YEAR(`date`) = YEAR(CURDATE())\n" +
+                "  AND MONTH(`date`) = MONTH(CURDATE())";
+        List<Object[]> rows = null;
+
+        try{
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+
+            // 获取结果集元数据
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            // 使用List暂存结果
+            rows = new ArrayList<>();
+
+            // 遍历结果集
+            while (rs.next()) {
+                ordersStatistics[0] = rs.getString(1);
+                ordersStatistics[1] = rs.getString(2);
+                ordersStatistics[2] = rs.getString(3);
+                ordersStatistics[3] = rs.getString(4);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return ordersStatistics;
+    }
+
+    public String[] getRevenueStatistics() {
+        String[] revenueStatistics = new String[4];
+
+        String sql = "SELECT (SELECT SUM(total_price)\n" +
+                "FROM tb_orders\n" +
+                "WHERE YEAR(`date`) = YEAR(CURDATE())\n" +
+                "AND MONTH(`date`) = MONTH(CURDATE())),\n" +
+                "(SELECT ROUND(AVG(total_price), 2)\n" +
+                "FROM tb_orders\n" +
+                "WHERE YEAR(`date`) = YEAR(CURDATE())\n" +
+                "AND MONTH(`date`) = MONTH(CURDATE())),\n" +
+                "(SELECT MAX(total_price)\n" +
+                "FROM tb_orders\n" +
+                "WHERE YEAR(`date`) = YEAR(CURDATE())\n" +
+                "AND MONTH(`date`) = MONTH(CURDATE())),\n" +
+                "(SELECT ROUND((SELECT SUM(total_price)\n" +
+                "FROM tb_orders\n" +
+                "WHERE YEAR(`date`) = YEAR(CURDATE())\n" +
+                "AND MONTH(`date`) = MONTH(CURDATE()))/\n" +
+                "(SELECT SUM(total_price)\n" +
+                "FROM tb_orders\n" +
+                "WHERE YEAR(`date`) = YEAR(CURDATE())\n" +
+                "AND MONTH(`date`) = MONTH(CURDATE())-1)*100, 2));";
+        List<Object[]> rows = null;
+
+        try{
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+
+            // 获取结果集元数据
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            // 使用List暂存结果
+            rows = new ArrayList<>();
+
+            // 遍历结果集
+            while (rs.next()) {
+                revenueStatistics[0] = rs.getString(1);
+                revenueStatistics[1] = rs.getString(2);
+                revenueStatistics[2] = rs.getString(3);
+                revenueStatistics[3] = rs.getString(4);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return revenueStatistics;
+    }
+
+    public String[] getCustomerStatistics() {
+        String[] customerStatistics = new String[4];
+
+        String sql = "SELECT (SELECT COUNT(*)\n" +
+                "FROM tb_customers),\n" +
+                "(SELECT COUNT(*)\n" +
+                "FROM tb_customers\n" +
+                "WHERE YEAR(setup_time) = YEAR(CURDATE())\n" +
+                "AND MONTH(setup_time) = MONTH(CURDATE())),\n" +
+                "(SELECT COUNT(*)\n" +
+                "FROM tb_customers\n" +
+                "WHERE YEAR(last_date) = YEAR(CURDATE())\n" +
+                "AND MONTH(last_date) > MONTH(CURDATE())-2),\n" +
+                "(SELECT COUNT(*)\n" +
+                "FROM tb_customers\n" +
+                "WHERE vip=1)";
+        List<Object[]> rows = null;
+
+        try{
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+
+            // 获取结果集元数据
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            // 使用List暂存结果
+            rows = new ArrayList<>();
+
+            // 遍历结果集
+            while (rs.next()) {
+                customerStatistics[0] = rs.getString(1);
+                customerStatistics[1] = rs.getString(2);
+                customerStatistics[2] = rs.getString(3);
+                customerStatistics[3] = rs.getString(4);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return customerStatistics;
+    }
+
+    public String[] getDeliveryStatistics() {
+        String[] deliveryStatistics = new String[1];
+
+        String sql = "SELECT COUNT(*)\n" +
+                "FROM tb_operators;";
+        List<Object[]> rows = null;
+
+        try{
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+
+            // 获取结果集元数据
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            // 使用List暂存结果
+            rows = new ArrayList<>();
+
+            // 遍历结果集
+            while (rs.next()) {
+                deliveryStatistics[0] = rs.getString(1);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return deliveryStatistics;
+    }
+
     public static void main(String[] args) {
         Database db = new Database();
         db.connect();
 
-        Object res[][] = null;
+        String[] a = null;
 
-        res = db.selectOrdersInfo(120);
+        a = db.getDeliveryStatistics();
 
-        System.out.println(res[0][2].toString());
+        System.out.println(a[0]);
 
         db.Close();
     }

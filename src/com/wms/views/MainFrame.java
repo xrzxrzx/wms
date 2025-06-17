@@ -32,9 +32,14 @@ public class MainFrame extends JFrame {
     
     // UI组件
     private JTabbedPane tabbedPane;
+    private JPanel contentPanel;
     private JPanel orderPanel;
+    private JPanel orderStatsPanel;
     private JPanel trackingPanel;
+    private JPanel revenueStatsPanel;
     private JPanel customerPanel;
+    private JPanel customerStatsPanel;
+    private JPanel deliveryStatsPanel;
     private JPanel statisticsPanel;
     private DefaultTableModel orderTableModel;
     private DefaultTableModel customerTableModel;
@@ -47,6 +52,8 @@ public class MainFrame extends JFrame {
     private JLabel trackingCourierLabel;
 
     private Database db;
+
+    String[] ordersStatistics = null;
 
     public MainFrame() {
         initializeFrame();
@@ -493,34 +500,13 @@ public class MainFrame extends JFrame {
         JPanel titlePanel = createTitlePanel();
         
         // 创建主要内容面板
-        JPanel contentPanel = new JPanel(new GridLayout(2, 2, 15, 15));
+        contentPanel = new JPanel(new GridLayout(2, 2, 15, 15));
         contentPanel.setBackground(BACKGROUND_COLOR);
+
+        ordersStatistics = db.getOrdersStatistics();
         
         // 创建统计卡片
-        JPanel orderStatsPanel = createEnhancedStatCard("📋 订单统计", 
-            new String[]{"本月订单数", "待处理", "运输中", "已完成"},
-            new String[]{"150", "20", "80", "50"},
-            new Color[]{PRIMARY_COLOR, new Color(255, 193, 7), SECONDARY_COLOR, new Color(108, 117, 125)});
-            
-        JPanel revenueStatsPanel = createEnhancedStatCard("💰 收入统计", 
-            new String[]{"本月收入", "平均订单金额", "最高订单金额", "同比增长"},
-            new String[]{"¥50,000", "¥333", "¥2,000", "+15.2%"},
-            new Color[]{new Color(40, 167, 69), new Color(23, 162, 184), new Color(255, 193, 7), new Color(220, 53, 69)});
-            
-        JPanel customerStatsPanel = createEnhancedStatCard("👥 客户统计", 
-            new String[]{"总客户数", "本月新增", "活跃客户", "VIP客户"},
-            new String[]{"500", "30", "200", "50"},
-            new Color[]{PRIMARY_COLOR, SECONDARY_COLOR, new Color(255, 193, 7), new Color(220, 53, 69)});
-            
-        JPanel deliveryStatsPanel = createEnhancedStatCard("🚚 配送统计", 
-            new String[]{"配送员数量", "覆盖城市", "准时率"},
-            new String[]{"20", "30", "98.5%"},
-            new Color[]{SECONDARY_COLOR, PRIMARY_COLOR, new Color(40, 167, 69)});
-        
-        contentPanel.add(orderStatsPanel);
-        contentPanel.add(revenueStatsPanel);
-        contentPanel.add(customerStatsPanel);
-        contentPanel.add(deliveryStatsPanel);
+        refreshStatistics();
         
         // 创建底部趋势面板
         JPanel trendPanel = createTrendPanel();
@@ -599,33 +585,33 @@ public class MainFrame extends JFrame {
                 panel.add(Box.createVerticalStrut(12));
             }
         }
-        
+
         // 添加鼠标悬停效果
         panel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 panel.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createEmptyBorder(2, 2, 4, 4),
-                    BorderFactory.createTitledBorder(
-                        BorderFactory.createLineBorder(PRIMARY_COLOR.brighter(), 3),
-                        title,
-                        TitledBorder.LEFT,
-                        TitledBorder.TOP,
-                        NORMAL_FONT,
-                        PRIMARY_COLOR.brighter()
-                    )
+                        BorderFactory.createEmptyBorder(2, 2, 4, 4),
+                        BorderFactory.createTitledBorder(
+                                BorderFactory.createLineBorder(PRIMARY_COLOR.brighter(), 3),
+                                title,
+                                TitledBorder.LEFT,
+                                TitledBorder.TOP,
+                                NORMAL_FONT,
+                                PRIMARY_COLOR.brighter()
+                        )
                 ));
             }
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 panel.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createEmptyBorder(2, 2, 4, 4),
-                    BorderFactory.createTitledBorder(
-                        BorderFactory.createLineBorder(PRIMARY_COLOR, 2),
-                        title,
-                        TitledBorder.LEFT,
-                        TitledBorder.TOP,
-                        NORMAL_FONT,
-                        PRIMARY_COLOR
-                    )
+                        BorderFactory.createEmptyBorder(2, 2, 4, 4),
+                        BorderFactory.createTitledBorder(
+                                BorderFactory.createLineBorder(PRIMARY_COLOR, 2),
+                                title,
+                                TitledBorder.LEFT,
+                                TitledBorder.TOP,
+                                NORMAL_FONT,
+                                PRIMARY_COLOR
+                        )
                 ));
             }
         });
@@ -708,11 +694,53 @@ public class MainFrame extends JFrame {
     }
 
     private void refreshStatistics() {
-        // 模拟数据刷新
-        JOptionPane.showMessageDialog(this, 
-            "统计数据已刷新！\n\n最新数据更新时间：" + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), 
-            "刷新成功", 
-            JOptionPane.INFORMATION_MESSAGE);
+        contentPanel.removeAll();
+
+        refreshOrdersStatistics();
+        refreshRevenueStatistics();
+        refreshCustomerStatistics();
+        refreshDeliveryStatistics();
+
+        contentPanel.add(orderStatsPanel);
+        contentPanel.add(revenueStatsPanel);
+        contentPanel.add(customerStatsPanel);
+        contentPanel.add(deliveryStatsPanel);
+    }
+
+    private void refreshOrdersStatistics(){
+        ordersStatistics = db.getOrdersStatistics();
+        if(orderStatsPanel != null){
+            orderStatsPanel.removeAll();
+        }
+        orderStatsPanel = createEnhancedStatCard("📋 订单统计",
+                new String[]{"本月订单数", "待处理", "运输中", "已完成"},
+                ordersStatistics,
+                new Color[]{PRIMARY_COLOR, new Color(255, 193, 7), SECONDARY_COLOR, new Color(108, 117, 125)});
+    }
+
+    private void refreshRevenueStatistics(){
+        String[] revenueStatistics = db.getRevenueStatistics();
+        revenueStatsPanel = createEnhancedStatCard("💰 收入统计",
+                new String[]{"本月收入", "平均订单金额", "最高订单金额", "同比增长"},
+                new String[]{"¥" + revenueStatistics[0], "¥" + revenueStatistics[1], "¥" + revenueStatistics[2],  revenueStatistics[3] + "%"},
+                new Color[]{new Color(40, 167, 69), new Color(23, 162, 184), new Color(255, 193, 7), new Color(220, 53, 69)});
+    }
+
+    private void refreshCustomerStatistics(){
+        //TODO 计算活跃用户
+        String[] customerStatistics = db.getCustomerStatistics();
+        customerStatsPanel = createEnhancedStatCard("👥 客户统计",
+                new String[]{"总客户数", "本月新增", "活跃客户", "VIP客户"},
+                customerStatistics,
+                new Color[]{PRIMARY_COLOR, SECONDARY_COLOR, new Color(255, 193, 7), new Color(220, 53, 69)});
+    }
+
+    private void refreshDeliveryStatistics(){
+        String[] deliveryStatistics = db.getDeliveryStatistics();
+        deliveryStatsPanel = createEnhancedStatCard("🚚 配送统计",
+                new String[]{"配送员数量", "覆盖城市", "准时率"},
+                new String[]{deliveryStatistics[0], "25", "98.5%"},
+                new Color[]{SECONDARY_COLOR, PRIMARY_COLOR, new Color(40, 167, 69)});
     }
 
     private void applyStyles() {
