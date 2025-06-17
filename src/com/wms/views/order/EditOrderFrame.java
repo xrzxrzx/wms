@@ -275,7 +275,7 @@ public class EditOrderFrame extends JFrame {
     }
 
     private JComboBox<String> createStatusComboBox() {
-        String[] statuses = {"待处理", "处理中", "已完成", "已取消"};
+        String[] statuses = {"待处理", "处理中", "已签收", "已取消"};
         JComboBox<String> comboBox = new JComboBox<>(statuses) {
             @Override
             protected void paintComponent(Graphics g) {

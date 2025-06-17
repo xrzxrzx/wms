@@ -208,6 +208,43 @@ public class Database {
         return rows != null ? rows.toArray(new Object[0][]) : null;
     }
 
+    public Object[][] selectOrdersInfo(int orderId){
+        String sql = "SELECT order_id, now_address, tb_operators.`name`, tb_operators.operation_id, tb_operators.phone, \n" +
+                "        `status`, DATE_ADD((SELECT `date` FROM tb_orders WHERE order_id="+ orderId + "),INTERVAL 3 DAY)\n" +
+                "FROM tb_orders, tb_operators\n" +
+                "WHERE tb_orders.operator_id=tb_operators.operation_id\n" +
+                "AND order_id="+ orderId + ";";
+        List<Object[]> rows = null;
+
+        try{
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+
+            // 获取结果集元数据
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            // 使用List暂存结果
+            rows = new ArrayList<>();
+
+            // 遍历结果集
+            while (rs.next()) {
+                Object[] row = new Object[columnCount];
+
+                // 填充行数据
+                for (int i = 0; i < columnCount; i++) {
+                    // 注意：JDBC列索引从1开始
+                    row[i] = rs.getObject(i + 1);
+                }
+
+                rows.add(row);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return rows != null ? rows.toArray(new Object[0][]) : null;
+    }
+
     public void deleteOrder(int orderId){
         String sql = "DELETE FROM tb_orders\n" +
                 "WHERE tb_orders.order_id=" + orderId;
@@ -219,151 +256,177 @@ public class Database {
         }
     }
 
-    // 客户管理相关方法
-    
-    /**
-     * 获取所有客户信息
-     */
-    public Object[][] getCustomersInfo() {
-        String sql = "SELECT customer_id, customer_name, contact_person, phone, address, create_time " +
-                "FROM tb_customers ORDER BY customer_id";
+    public String[] getOrdersStatistics(){
+        String[] ordersStatistics = new String[4];
+
+        String sql = "SELECT \n" +
+                "  COUNT(*) AS total,\n" +
+                "  SUM(CASE WHEN status = '待处理' THEN 1 ELSE 0 END) AS pending,\n" +
+                "  SUM(CASE WHEN status = '运输中' THEN 1 ELSE 0 END) AS shipping,\n" +
+                "  SUM(CASE WHEN status = '已签收' THEN 1 ELSE 0 END) AS delivered\n" +
+                "FROM tb_orders\n" +
+                "WHERE YEAR(`date`) = YEAR(CURDATE())\n" +
+                "  AND MONTH(`date`) = MONTH(CURDATE())";
         List<Object[]> rows = null;
 
-        try {
+        try{
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
 
+            // 获取结果集元数据
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
+
+            // 使用List暂存结果
             rows = new ArrayList<>();
 
+            // 遍历结果集
             while (rs.next()) {
-                Object[] row = new Object[columnCount];
-                for (int i = 0; i < columnCount; i++) {
-                    row[i] = rs.getObject(i + 1);
-                }
-                rows.add(row);
+                ordersStatistics[0] = rs.getString(1);
+                ordersStatistics[1] = rs.getString(2);
+                ordersStatistics[2] = rs.getString(3);
+                ordersStatistics[3] = rs.getString(4);
+
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        return rows != null ? rows.toArray(new Object[0][]) : null;
+
+        return ordersStatistics;
     }
 
-    /**
-     * 根据客户ID获取客户详细信息
-     */
-    public Object[] getCustomerById(String customerId) {
-        String sql = "SELECT customer_id, customer_name, contact_person, phone, address, is_vip, create_time " +
-                "FROM tb_customers WHERE customer_id = ?";
-        
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, customerId);
-            ResultSet rs = pstmt.executeQuery();
-            
-            if (rs.next()) {
-                Object[] customer = new Object[7];
-                customer[0] = rs.getString("customer_id");
-                customer[1] = rs.getString("customer_name");
-                customer[2] = rs.getString("contact_person");
-                customer[3] = rs.getString("phone");
-                customer[4] = rs.getString("address");
-                customer[5] = rs.getBoolean("is_vip");
-                customer[6] = rs.getString("create_time");
-                return customer;
+    public String[] getRevenueStatistics() {
+        String[] revenueStatistics = new String[4];
+
+        String sql = "SELECT (SELECT SUM(total_price)\n" +
+                "FROM tb_orders\n" +
+                "WHERE YEAR(`date`) = YEAR(CURDATE())\n" +
+                "AND MONTH(`date`) = MONTH(CURDATE())),\n" +
+                "(SELECT ROUND(AVG(total_price), 2)\n" +
+                "FROM tb_orders\n" +
+                "WHERE YEAR(`date`) = YEAR(CURDATE())\n" +
+                "AND MONTH(`date`) = MONTH(CURDATE())),\n" +
+                "(SELECT MAX(total_price)\n" +
+                "FROM tb_orders\n" +
+                "WHERE YEAR(`date`) = YEAR(CURDATE())\n" +
+                "AND MONTH(`date`) = MONTH(CURDATE())),\n" +
+                "(SELECT ROUND((SELECT SUM(total_price)\n" +
+                "FROM tb_orders\n" +
+                "WHERE YEAR(`date`) = YEAR(CURDATE())\n" +
+                "AND MONTH(`date`) = MONTH(CURDATE()))/\n" +
+                "(SELECT SUM(total_price)\n" +
+                "FROM tb_orders\n" +
+                "WHERE YEAR(`date`) = YEAR(CURDATE())\n" +
+                "AND MONTH(`date`) = MONTH(CURDATE())-1)*100, 2));";
+        List<Object[]> rows = null;
+
+        try{
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+
+            // 获取结果集元数据
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            // 使用List暂存结果
+            rows = new ArrayList<>();
+
+            // 遍历结果集
+            while (rs.next()) {
+                revenueStatistics[0] = rs.getString(1);
+                revenueStatistics[1] = rs.getString(2);
+                revenueStatistics[2] = rs.getString(3);
+                revenueStatistics[3] = rs.getString(4);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        return null;
+
+        return revenueStatistics;
     }
 
-    /**
-     * 更新客户信息
-     */
-    public boolean updateCustomer(String customerId, String customerName, String contactPerson, 
-                                String phone, String address, boolean isVip) {
-        String sql = "UPDATE tb_customers SET customer_name = ?, contact_person = ?, " +
-                "phone = ?, address = ?, is_vip = ? WHERE customer_id = ?";
-        
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, customerName);
-            pstmt.setString(2, contactPerson);
-            pstmt.setString(3, phone);
-            pstmt.setString(4, address);
-            pstmt.setBoolean(5, isVip);
-            pstmt.setString(6, customerId);
-            
-            int result = pstmt.executeUpdate();
-            return result > 0;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return false;
-        }
-    }
+    public String[] getCustomerStatistics() {
+        String[] customerStatistics = new String[4];
 
-    /**
-     * 删除客户信息
-     */
-    public boolean deleteCustomer(String customerId) {
-        // 首先检查是否有相关订单
-        String checkSql = "SELECT COUNT(*) FROM tb_orders WHERE customer_id = ?";
-        try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
-            checkStmt.setString(1, customerId);
-            ResultSet rs = checkStmt.executeQuery();
-            if (rs.next() && rs.getInt(1) > 0) {
-                return false; // 有相关订单，不能删除
+        String sql = "SELECT (SELECT COUNT(*)\n" +
+                "FROM tb_customers),\n" +
+                "(SELECT COUNT(*)\n" +
+                "FROM tb_customers\n" +
+                "WHERE YEAR(setup_time) = YEAR(CURDATE())\n" +
+                "AND MONTH(setup_time) = MONTH(CURDATE())),\n" +
+                "(SELECT COUNT(*)\n" +
+                "FROM tb_customers\n" +
+                "WHERE YEAR(last_date) = YEAR(CURDATE())\n" +
+                "AND MONTH(last_date) > MONTH(CURDATE())-2),\n" +
+                "(SELECT COUNT(*)\n" +
+                "FROM tb_customers\n" +
+                "WHERE vip=1)";
+        List<Object[]> rows = null;
+
+        try{
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+
+            // 获取结果集元数据
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            // 使用List暂存结果
+            rows = new ArrayList<>();
+
+            // 遍历结果集
+            while (rs.next()) {
+                customerStatistics[0] = rs.getString(1);
+                customerStatistics[1] = rs.getString(2);
+                customerStatistics[2] = rs.getString(3);
+                customerStatistics[3] = rs.getString(4);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            return false;
         }
 
-        // 删除客户
-        String sql = "DELETE FROM tb_customers WHERE customer_id = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, customerId);
-            int result = pstmt.executeUpdate();
-            return result > 0;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return false;
-        }
+        return customerStatistics;
     }
 
-    /**
-     * 添加新客户
-     */
-    public boolean addCustomer(String customerId, String customerName, String contactPerson, 
-                             String phone, String address, boolean isVip) {
-        String sql = "INSERT INTO tb_customers (customer_id, customer_name, contact_person, phone, address, is_vip, create_time) " +
-                "VALUES (?, ?, ?, ?, ?, ?, NOW())";
-        
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, customerId);
-            pstmt.setString(2, customerName);
-            pstmt.setString(3, contactPerson);
-            pstmt.setString(4, phone);
-            pstmt.setString(5, address);
-            pstmt.setBoolean(6, isVip);
-            
-            int result = pstmt.executeUpdate();
-            return result > 0;
+    public String[] getDeliveryStatistics() {
+        String[] deliveryStatistics = new String[1];
+
+        String sql = "SELECT COUNT(*)\n" +
+                "FROM tb_operators;";
+        List<Object[]> rows = null;
+
+        try{
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+
+            // 获取结果集元数据
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            // 使用List暂存结果
+            rows = new ArrayList<>();
+
+            // 遍历结果集
+            while (rs.next()) {
+                deliveryStatistics[0] = rs.getString(1);
+            }
         } catch (Exception ex) {
             ex.printStackTrace();
-            return false;
         }
+
+        return deliveryStatistics;
+
     }
 
     public static void main(String[] args) {
         Database db = new Database();
         db.connect();
 
-        Object res[][] = null;
+        String[] a = null;
 
-        res = db.getOrdersInfo(120);
+        a = db.getDeliveryStatistics();
 
-        System.out.println(res[0][2].toString());
+        System.out.println(a[0]);
 
         db.Close();
     }
