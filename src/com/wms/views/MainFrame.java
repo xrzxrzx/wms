@@ -293,7 +293,6 @@ public class MainFrame extends JFrame {
         updateOrdersInfo();
     }
 
-
     private void deleteOrder(JTable table) {
         int selectedRow = table.getSelectedRow();
         if (selectedRow != -1) {
@@ -511,7 +510,7 @@ public class MainFrame extends JFrame {
     }
 
     private void createCustomerTable() {
-        String[] columnNames = {"客户编号", "客户名称", "联系人", "电话", "地址", "创建时间"};
+        String[] columnNames = {"客户编号", "客户名称", "联系人", "电话", "地址", "最后活跃时间", "创建时间"};
         
         customerTableModel = new DefaultTableModel(columnNames, 0) {
             @Override

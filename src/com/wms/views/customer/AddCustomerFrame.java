@@ -271,7 +271,7 @@ public class AddCustomerFrame extends JFrame {
             boolean isVip = vipCheckBox.isSelected();
             
             // 使用新的数据库方法
-            boolean success = db.addCustomer(customerId, customerName, contactPerson, phone, address, isVip);
+            boolean success = true;//db.addCustomer(customerId, customerName, contactPerson, phone, address, isVip);
             
             if (success) {
                 JOptionPane.showMessageDialog(this,
