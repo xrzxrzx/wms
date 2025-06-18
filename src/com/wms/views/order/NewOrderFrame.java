@@ -5,6 +5,10 @@ import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.ListIterator;
 import java.util.Objects;
@@ -280,21 +284,21 @@ public class NewOrderFrame extends JFrame {
     }
 
 
-    private boolean SaveData(){
+    private boolean SaveData() {
 
-            int customerId = Integer.parseInt(textFieldList.get(0).getText().trim());
-            String nowLocation = textFieldList.get(1).getText().trim();
-            String targetLocation = textFieldList.get(2).getText().trim();
-            int type = Integer.parseInt(textFieldList.get(3).getText().trim());
-            double weight = Double.parseDouble(textFieldList.get(4).getText().trim());
-            int workId = Integer.parseInt(textFieldList.get(5).getText().trim());
-            double price;//物流费用（需计算）
+        int customerId = Integer.parseInt(textFieldList.get(0).getText().trim());
+        String nowLocation = textFieldList.get(1).getText().trim();
+        String targetLocation = textFieldList.get(2).getText().trim();
+        int type = Integer.parseInt(textFieldList.get(3).getText().trim());
+        double weight = Double.parseDouble(textFieldList.get(4).getText().trim());
+        int workId = Integer.parseInt(textFieldList.get(5).getText().trim());
+        double price;//物流费用（需计算）
 
-            //客户编号验证
-            if(Objects.equals(db.callGetCustomerInfo(customerId), "NULL")){
-                showErrorDialog("验证失败", "客户不存在！请检查客户编号。");
-                return false;
-            }
+        //客户编号验证
+        if (Objects.equals(db.callGetCustomerInfo(customerId), "NULL")) {
+            showErrorDialog("验证失败", "客户不存在！请检查客户编号。");
+            return false;
+        }
 
         //物流类型编号验证
         if (Objects.equals(db.callGetLogisticsTypeInfo(type, 1), "NULL")) {
@@ -330,10 +334,9 @@ public class NewOrderFrame extends JFrame {
             pstmt.setString(7, nowLocation);
             pstmt.setString(8, "待发货");
             int rows = pstmt.executeUpdate();
-            pstmt.close();
 
             if (rows > 0) {
-                return true;
+                //return true;
             } else {
                 showErrorDialog("保存失败", "订单保存失败！请重试。");
                 return false;
@@ -346,30 +349,66 @@ public class NewOrderFrame extends JFrame {
             showErrorDialog("数据库错误", "数据库操作异常：" + ex.getMessage());
             return false;
         }
-    }
-
-    public void Show() {
+        int rows = 0;
         try {
-            // 设置系统外观
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            String sql = "UPDATE tb_customers " +
+                    "SET last_date = curdate()\n" +
+                    "WHERE customer_id = ?";
 
-            // 设置全局字体
-            //UIManager.put("Button.font", new Font("微软雅黑", Font.PLAIN, 12));
-            //UIManager.put("Label.font", new Font("微软雅黑", Font.PLAIN, 12));
-            //UIManager.put("TextField.font", new Font("微软雅黑", Font.PLAIN, 12));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        setVisible(true);
-    }
+            try {
+                try (PreparedStatement pstmt = db.conn.prepareStatement(sql)) {
 
-    public static void main(String[] args) {
-        // 使用事件调度线程创建UI
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new NewOrderFrame().Show();
+                    // 设置参数（注意索引顺序）
+                    pstmt.setInt(1, Integer.parseInt(String.valueOf(customerId)));
+
+                    // 执行更新
+                    rows = pstmt.executeUpdate();
+                    System.out.println(rows + " 行被更新");
+
+                    pstmt.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-        });
+
+            if (rows > 0) {
+                return true;
+            } else {
+                showErrorDialog("保存失败", "订单保存失败！请重试。");
+                return false;
+            }
+        } catch (NumberFormatException ex) {
+            showErrorDialog("输入错误", "请确保客户编号、物流类型编号、重量和工人编号都是有效的数字！");
+            return false;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            showErrorDialog("数据库错误", "数据库操作异常：");
+            return false;
+        }
+}
+
+public void Show() {
+    try {
+        // 设置系统外观
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+
+        // 设置全局字体
+        //UIManager.put("Button.font", new Font("微软雅黑", Font.PLAIN, 12));
+        //UIManager.put("Label.font", new Font("微软雅黑", Font.PLAIN, 12));
+        //UIManager.put("TextField.font", new Font("微软雅黑", Font.PLAIN, 12));
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+    setVisible(true);
+}
+
+public static void main(String[] args) {
+    // 使用事件调度线程创建UI
+    SwingUtilities.invokeLater(new Runnable() {
+        @Override
+        public void run() {
+            new NewOrderFrame().Show();
+        }
+    });
+}
 }

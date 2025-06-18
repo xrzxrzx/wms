@@ -116,10 +116,7 @@ public class AddCustomerFrame extends JFrame {
     }
     
     private String generateCustomerId() {
-        // 生成客户编号：CUS + 年月日 + 4位随机数
-        String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        int randomNum = (int) (Math.random() * 10000);
-        return String.format("CUS%s%04d", dateStr, randomNum);
+        return new String(String.valueOf(db.getCustomersLastId()+1));
     }
     
     private void layoutComponents() {
@@ -263,27 +260,37 @@ public class AddCustomerFrame extends JFrame {
         
         try {
             // 获取表单数据
-            String customerId = customerIdField.getText().trim();
             String customerName = customerNameField.getText().trim();
             String contactPerson = contactPersonField.getText().trim();
             String phone = phoneField.getText().trim();
             String address = addressArea.getText().trim();
             boolean isVip = vipCheckBox.isSelected();
-            
-            // 使用新的数据库方法
-            boolean success = true;//db.addCustomer(customerId, customerName, contactPerson, phone, address, isVip);
-            
-            if (success) {
-                JOptionPane.showMessageDialog(this,
-                    "客户信息保存成功！\n\n客户编号：" + customerId,
-                    "保存成功",
-                    JOptionPane.INFORMATION_MESSAGE);
-                dispose(); // 关闭窗口
-            } else {
-                JOptionPane.showMessageDialog(this,
-                    "保存失败，请检查数据库连接或重试。",
-                    "保存失败",
-                    JOptionPane.ERROR_MESSAGE);
+
+            try {
+                String sql = "INSERT INTO tb_customers (customer_name, contacts, phone,\n" +
+                        "                            address, last_date, setup_time, vip)\n" +
+                        "VALUES(?, ?, ?, ?, curdate(), curdate(), ?);";
+                java.sql.PreparedStatement pstmt = db.conn.prepareStatement(sql);
+                pstmt.setString(1, customerName);
+                pstmt.setString(2, contactPerson);
+                pstmt.setString(3, phone);
+                pstmt.setString(4, address);
+                pstmt.setByte(5, isVip ? (byte) 1 : 0);
+                int rows = pstmt.executeUpdate();
+                pstmt.close();
+
+                if (rows > 0) {
+                    showSuccessDialog("保存成功", "客户保存成功！");
+                    return;
+                } else {
+                    showErrorDialog("保存失败", "客户保存失败！请重试。");
+                    return;
+                }
+            } catch (NumberFormatException ex) {
+                showErrorDialog("输入错误", "请确保输入都是有效数据！");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                showErrorDialog("数据库错误", "数据库操作异常：" + ex.getMessage());
             }
             
         } catch (Exception e) {
@@ -292,6 +299,24 @@ public class AddCustomerFrame extends JFrame {
                 "错误",
                 JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private void showErrorDialog(String title, String message) {
+        JOptionPane.showMessageDialog(
+                this,
+                message,
+                title,
+                JOptionPane.ERROR_MESSAGE
+        );
+    }
+
+    private void showSuccessDialog(String title, String message) {
+        JOptionPane.showMessageDialog(
+                this,
+                message,
+                title,
+                JOptionPane.INFORMATION_MESSAGE
+        );
     }
     
     private boolean validateForm() {

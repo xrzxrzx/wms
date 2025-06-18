@@ -19,7 +19,7 @@ import java.util.List;
 
 public class MainFrame extends JFrame {
     // 常量定义
-    private static final String APP_TITLE = "物流管理系统 v1.0";
+    private static final String APP_TITLE = "永隆物流管理系统 v1.0";
     private static final String APP_VERSION = "v1.0";
     private static final int WINDOW_WIDTH = 1200;
     private static final int WINDOW_HEIGHT = 800;
@@ -188,10 +188,10 @@ public class MainFrame extends JFrame {
         // 创建工具栏
         JToolBar toolBar = createStyledToolBar();
         
-        JButton addButton = createStyledButton("➕ 新建订单", "创建新的物流订单", PRIMARY_COLOR);
-        JButton editButton = createStyledButton("✏️ 编辑订单", "编辑选中的订单", SECONDARY_COLOR);
-        JButton deleteButton = createStyledButton("🗑️ 删除订单", "删除选中的订单", WARNING_COLOR);
-        JButton refreshButton = createStyledButton("🔄 刷新", "刷新订单列表", PRIMARY_COLOR);
+        JButton addButton = createStyledButton("新建订单", "创建新的物流订单", PRIMARY_COLOR);
+        JButton editButton = createStyledButton("编辑订单", "编辑选中的订单", SECONDARY_COLOR);
+        JButton deleteButton = createStyledButton("删除订单", "删除选中的订单", WARNING_COLOR);
+        JButton refreshButton = createStyledButton("刷新", "刷新订单列表", PRIMARY_COLOR);
 
         addButton.addActionListener(e -> new NewOrderFrame().Show());
         editButton.addActionListener(e -> new EditOrderFrame(orderTable).Show());
@@ -425,10 +425,10 @@ public class MainFrame extends JFrame {
         // 创建工具栏
         JToolBar toolBar = createStyledToolBar();
         
-        JButton addButton = createStyledButton("➕ 添加客户", "添加新客户", PRIMARY_COLOR);
-        JButton editButton = createStyledButton("✏️ 编辑客户", "编辑选中的客户", SECONDARY_COLOR);
-        JButton deleteButton = createStyledButton("🗑️ 删除客户", "删除选中的客户", WARNING_COLOR);
-        JButton refreshButton = createStyledButton("🔄 刷新", "刷新客户列表", PRIMARY_COLOR);
+        JButton addButton = createStyledButton("添加客户", "添加新客户", PRIMARY_COLOR);
+        JButton editButton = createStyledButton("编辑客户", "编辑选中的客户", SECONDARY_COLOR);
+        JButton deleteButton = createStyledButton("删除客户", "删除选中的客户", WARNING_COLOR);
+        JButton refreshButton = createStyledButton("刷新", "刷新客户列表", PRIMARY_COLOR);
         
         addButton.addActionListener(e -> new AddCustomerFrame().Show());
         editButton.addActionListener(e -> editCustomer(customerTable));
@@ -577,7 +577,7 @@ public class MainFrame extends JFrame {
             new EmptyBorder(15, 20, 15, 20)
         ));
         
-        JLabel titleLabel = new JLabel("📊 数据统计概览");
+        JLabel titleLabel = new JLabel("数据统计概览");
         titleLabel.setFont(TITLE_FONT);
         titleLabel.setForeground(PRIMARY_COLOR);
         
@@ -591,7 +591,7 @@ public class MainFrame extends JFrame {
         leftPanel.add(subtitleLabel, BorderLayout.CENTER);
         
         // 添加刷新按钮
-        JButton refreshButton = new JButton("🔄 刷新数据");
+        JButton refreshButton = new JButton("刷新数据");
         refreshButton.setFont(NORMAL_FONT);
         refreshButton.setToolTipText("刷新统计数据");
         refreshButton.setBackground(PRIMARY_COLOR);
@@ -709,7 +709,7 @@ public class MainFrame extends JFrame {
         ));
         
         // 标题
-        JLabel trendTitle = new JLabel("📈 业务趋势");
+        JLabel trendTitle = new JLabel("业务趋势");
         trendTitle.setFont(NORMAL_FONT);
         trendTitle.setForeground(PRIMARY_COLOR);
         
@@ -765,7 +765,7 @@ public class MainFrame extends JFrame {
         if(orderStatsPanel != null){
             orderStatsPanel.removeAll();
         }
-        orderStatsPanel = createEnhancedStatCard("📋 订单统计",
+        orderStatsPanel = createEnhancedStatCard("订单统计",
                 new String[]{"本月订单数", "待处理", "运输中", "已完成"},
                 ordersStatistics,
                 new Color[]{PRIMARY_COLOR, new Color(255, 193, 7), SECONDARY_COLOR, new Color(108, 117, 125)});
@@ -773,16 +773,15 @@ public class MainFrame extends JFrame {
 
     private void refreshRevenueStatistics(){
         String[] revenueStatistics = db.getRevenueStatistics();
-        revenueStatsPanel = createEnhancedStatCard("💰 收入统计",
+        revenueStatsPanel = createEnhancedStatCard("收入统计",
                 new String[]{"本月收入", "平均订单金额", "最高订单金额", "同比增长"},
                 new String[]{"¥" + revenueStatistics[0], "¥" + revenueStatistics[1], "¥" + revenueStatistics[2],  revenueStatistics[3] + "%"},
                 new Color[]{new Color(40, 167, 69), new Color(23, 162, 184), new Color(255, 193, 7), new Color(220, 53, 69)});
     }
 
     private void refreshCustomerStatistics(){
-        //TODO 计算活跃用户
         String[] customerStatistics = db.getCustomerStatistics();
-        customerStatsPanel = createEnhancedStatCard("👥 客户统计",
+        customerStatsPanel = createEnhancedStatCard("客户统计",
                 new String[]{"总客户数", "本月新增", "活跃客户", "VIP客户"},
                 customerStatistics,
                 new Color[]{PRIMARY_COLOR, SECONDARY_COLOR, new Color(255, 193, 7), new Color(220, 53, 69)});
@@ -790,7 +789,7 @@ public class MainFrame extends JFrame {
 
     private void refreshDeliveryStatistics(){
         String[] deliveryStatistics = db.getDeliveryStatistics();
-        deliveryStatsPanel = createEnhancedStatCard("🚚 配送统计",
+        deliveryStatsPanel = createEnhancedStatCard("配送统计",
                 new String[]{"配送员数量", "覆盖城市", "准时率"},
                 new String[]{deliveryStatistics[0], "25", "98.5%"},
                 new Color[]{SECONDARY_COLOR, PRIMARY_COLOR, new Color(40, 167, 69)});

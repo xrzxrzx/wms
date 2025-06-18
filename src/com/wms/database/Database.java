@@ -453,6 +453,70 @@ public class Database {
         return rows != null ? rows.toArray(new Object[0][]) : null;
     }
 
+    public int getCustomersLastId(){
+        int lastId = 0;
+
+        String sql = "SELECT MAX(customer_id) FROM tb_customers";
+        List<Object[]> rows = null;
+
+        try{
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+
+            // 获取结果集元数据
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            // 使用List暂存结果
+            rows = new ArrayList<>();
+
+            // 遍历结果集
+            while (rs.next()) {
+                lastId = rs.getInt(1);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return lastId;
+    }
+
+    public Object[][] getCustomerById(String currentCustomerId) {
+        String sql = "SELECT customer_id, customer_name, contacts,\n" +
+                "        phone, address, vip, setup_time\n" +
+                "FROM tb_customers\n" +
+                    "WHERE customer_id = " + currentCustomerId;
+        List<Object[]> rows = null;
+
+        try{
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+
+            // 获取结果集元数据
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            // 使用List暂存结果
+            rows = new ArrayList<>();
+
+            // 遍历结果集
+            while (rs.next()) {
+                Object[] row = new Object[columnCount];
+
+                // 填充行数据
+                for (int i = 0; i < columnCount; i++) {
+                    // 注意：JDBC列索引从1开始
+                    row[i] = rs.getObject(i + 1);
+                }
+
+                rows.add(row);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return rows != null ? rows.toArray(new Object[0][]) : null;
+    }
+
     public boolean deleteCustomer(String customerId) {
         String sql = "DELETE FROM tb_customers\n" +
                 "WHERE tb_customers.customer_id=" + customerId;
@@ -470,11 +534,11 @@ public class Database {
         Database db = new Database();
         db.connect();
 
-        String[] a = null;
+        Object[][] a = null;
 
-        a = db.getDeliveryStatistics();
+        a = db.getCustomerById("5");
 
-        System.out.println(a[0]);
+        System.out.println(a[0][5]);
 
         db.Close();
     }
